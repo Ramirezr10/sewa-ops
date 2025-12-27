@@ -2,7 +2,12 @@ name: Build and Deploy to GKE
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '.gitignore'
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}

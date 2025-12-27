@@ -2,10 +2,17 @@
 .terraform/
 *.tfstate
 *.tfstate.backup
+*.tfvars
 .terraform.lock.hcl
 
-# App & Environment
+# Credentials
+*.json
+*.pem
+*.key
+
+# OS/IDEs
+.DS_Store
+.idea/
+.vscode/
 __pycache__/
 *.py[cod]
-sa-key.json
-.DS_Store
