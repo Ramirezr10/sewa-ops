@@ -1,3 +1,5 @@
+![Build Status](https://github.com/Ramirezr10/sewa-ops/actions/workflows/deploy.yml/badge.svg)
+
 Sewa-Ops: Secure Serverless-Edge Web Architecture
 
 A production-ready CI/CD pipeline deploying a containerized Python application to Google Kubernetes Engine (GKE) Autopilot using Workload Identity Federation.
