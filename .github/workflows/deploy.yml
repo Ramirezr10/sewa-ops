@@ -51,7 +51,7 @@ jobs:
         location: ${{ env.GKE_ZONE }}
 
     - name: Deploy to GKE
-       run: |-
+      run: |-
         # This replaces the placeholder in your yaml with the actual built image tag
         sed -i "s|image:.*|image: us-central1-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA|g" k8s/deployment.yaml
         kubectl apply -f k8s/deployment.yaml
