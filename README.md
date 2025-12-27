@@ -6,13 +6,19 @@ A production-ready CI/CD pipeline deploying a containerized Python application t
 Code snippet
 
 graph TD
-    A[GitHub Repo] -->|Push to Main| B(GitHub Actions)
-    B -->|OIDC Auth| C{GCP Workload Identity}
-    C -->|Short-lived Token| D[Artifact Registry]
-    B -->|Docker Push| D
-    B -->|Kubectl Apply| E[GKE Autopilot]
-    E -->|Pull Image| D
-    F[User] -->|Access| G[Load Balancer]
+    subgraph GitHub
+        A[GitHub Repo] -->|Push| B(GitHub Actions)
+    end
+
+    subgraph "Google Cloud"
+        B -->|OIDC Auth| C{Workload Identity}
+        C -->|Token| D[Artifact Registry]
+        B -->|Push Image| D
+        B -->|Deploy| E[GKE Autopilot]
+        E -->|Pull| D
+    end
+
+    F[User] -->|Web Traffic| G[Load Balancer]
     G --> E
 
 🚀 Features
