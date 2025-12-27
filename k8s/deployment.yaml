@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-app
+  template:
+    metadata:
+      labels:
+        app: hello-app
+    spec:
+      containers:
+      - name: hello-app
+        image: us-central1-docker.pkg.dev/project-ce2811ca-f6d4-4767-842/project-images/hello-app:latest
+        ports:
+        - containerPort: 8080
