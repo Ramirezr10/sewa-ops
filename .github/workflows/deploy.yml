@@ -56,4 +56,6 @@ jobs:
         kubectl apply -f deployment.yaml
         kubectl expose deployment hello-server --type=LoadBalancer --port=80 --target-port=8080 --dry-run=client -o yaml > service.yaml
         kubectl apply -f service.yaml
+
+
         
