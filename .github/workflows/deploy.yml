@@ -1,0 +1,57 @@
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GKE_CLUSTER: autopilot-cluster
+  GKE_ZONE: us-central1
+  IMAGE: project-images/hello-app
+
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Authenticate with Google Cloud
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    # Configure Docker to use gcloud as a credential helper
+    - name: Docker configuration
+      run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    # Build the Docker image
+    - name: Build
+      run: |-
+        docker build \
+          --tag "us-central1-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA" \
+          ./app
+
+    # Push the Docker image to Google Artifact Registry
+    - name: Publish
+      run: |-
+        docker push "us-central1-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
+
+    # Set up kspread/kubectl to talk to GKE
+    - name: Get GKE Credentials
+      uses: 'google-github-actions/get-gke-credentials@v2'
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    # Deploy to the GKE cluster
+    - name: Deploy
+      run: |-
+        kubectl create deployment hello-server --image="us-central1-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA" --dry-run=client -o yaml > deployment.yaml
+        kubectl apply -f deployment.yaml
+        kubectl expose deployment hello-server --type=LoadBalancer --port=80 --target-port=8080 --dry-run=client -o yaml > service.yaml
+        kubectl apply -f service.yaml
