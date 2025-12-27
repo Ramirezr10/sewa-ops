@@ -14,41 +14,42 @@ jobs:
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
+    
+    # 1. ADD THIS PERMISSIONS BLOCK (Crucial for WIF)
+    permissions:
+      contents: 'read'
+      id-token: 'write'
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    # Authenticate with Google Cloud
+    # 2. UPDATE THIS STEP TO USE WIF
     - id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+        workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: 'github-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
-    # Configure Docker to use gcloud as a credential helper
     - name: Docker configuration
       run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
-    # Build the Docker image
     - name: Build
       run: |-
         docker build \
           --tag "us-central1-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA" \
           ./app
 
-    # Push the Docker image to Google Artifact Registry
     - name: Publish
       run: |-
         docker push "us-central1-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
 
-    # Set up kspread/kubectl to talk to GKE
     - name: Get GKE Credentials
       uses: 'google-github-actions/get-gke-credentials@v2'
       with:
         cluster_name: ${{ env.GKE_CLUSTER }}
         location: ${{ env.GKE_ZONE }}
 
-    # Deploy to the GKE cluster
     - name: Deploy
       run: |-
         kubectl create deployment hello-server --image="us-central1-docker.pkg.dev/$PROJECT_ID/$IMAGE:$GITHUB_SHA" --dry-run=client -o yaml > deployment.yaml
